@@ -1,0 +1,42 @@
+<?php 
+
+class App
+{
+
+	protected $controller = 'home';
+	protected $method = 'index';
+	protected $params = [];
+
+	public function __construct(){
+		$url = $this->parseURL();
+		//Verificamos que la clase exista
+		if(file_exists('../app/controllers/'. $url[0] .'.php')){
+			$this->controller = $url[0];
+			unset($url[0]);
+		}
+
+		require_once '../app/controllers/'. $this->controller .'.php';
+		//Creamos una instancia del controlador especificado en la URL
+		$this->controller = new $this->controller;
+
+		if(isset($url[1])){
+			if(method_exists($this->controller, $url[1])){
+				$this->method = $url[1];
+				//Eliminamos la posición correspondiente al metodo del array
+				unset($url[1]);
+			}
+		}
+
+		//Guardamos los valores del array en el atributo
+		$this->params = $url ? array_values($url) : [];
+		//Ejecutamos una un metodo con los parametros enviados en la URL
+		call_user_func_array([$this->controller, $this->method], $this->params);
+	}
+
+	public function parseUrl(){
+		if(isset($_GET['url'])){
+			//Sanitizamos la URL y obtenemos los valores por separado
+			return $url = explode('/', filter_var(rtrim($_GET['url'], '/'), FILTER_SANITIZE_URL));
+		}
+	}
+}
